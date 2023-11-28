@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
 
-const Blogs = ({ blogs }: { blogs: { title: string; body: string }[] }) => {
+const SSRBlogs = ({ blogs }: { blogs: { title: string; body: string }[] }) => {
   const router = useRouter();
 
   const loadPost = (title: string) => router.push(`${router.asPath}/${title}`);
@@ -21,8 +21,11 @@ const Blogs = ({ blogs }: { blogs: { title: string; body: string }[] }) => {
   );
 };
 
-// Special Function executed on the server at the build time.
-export async function getStaticProps() {
+// Special Function executed on the server each time the request comes to this route.
+export async function getServerSideProps() {
+  console.log(
+    "---- Executed everytime a request came in to server for this page at runtime. ----"
+  );
   const res = await fetch("https://dummyjson.com/posts");
   const blogsResponse = await res.json();
   const blogsList = blogsResponse.posts.map((b: any) => ({
@@ -31,9 +34,9 @@ export async function getStaticProps() {
   }));
   return {
     props: {
-      blogs: blogsList.slice(0, 4),
+      blogs: blogsList.slice(5, 9),
     },
   };
 }
 
-export default Blogs;
+export default SSRBlogs;
