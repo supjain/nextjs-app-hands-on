@@ -1,23 +1,26 @@
+import { POSTS_API } from "@/constants/http-constants";
+import { IPost } from "@/models/post";
+import {
+  generateRandomNumber,
+  generateUpperLowerNumbers,
+} from "@/utils/random-number";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
-const StaticBlogs = ({
-  blogs,
-}: {
-  blogs: { title: string; body: string }[];
-}) => {
+const StaticBlogs = ({ blogs }: { blogs: IPost[] }) => {
   const router = useRouter();
 
-  const loadPost = (title: string) => router.push(`${router.asPath}/${title}`);
+  const loadPost = (id: string) => router.push(`${router.asPath}/${id}`);
 
   return (
     <div>
       <Head>
         <title>Blogs</title>
       </Head>
-      {blogs.map(({ body, title }) => (
-        <div key={title} className="blog-item" onClick={() => loadPost(title)}>
+      {blogs.map(({ body, title, id }) => (
+        <div key={title} className="blog-item" onClick={() => loadPost(id)}>
           <h1>{title}</h1>
+          <p>Id: {id}</p>
           <p>{body}</p>
         </div>
       ))}
@@ -27,17 +30,20 @@ const StaticBlogs = ({
 
 // Special Function executed on the server at the build time.
 export async function getStaticProps() {
-  console.log("---- Executed on the build/compile time and never again. ----");
-  const res = await fetch("https://dummyjson.com/posts");
+  console.log("Executing");
+  const res = await fetch(POSTS_API);
   const blogsResponse = await res.json();
-  const blogsList = blogsResponse.posts.map((b: any) => ({
-    title: b.title,
-    body: b.body,
+  const blogsList = blogsResponse.map(({ body, id, title }: IPost) => ({
+    title,
+    body,
+    id,
   }));
+  const { floor, ceil } = generateUpperLowerNumbers(4);
   return {
     props: {
-      blogs: blogsList.slice(0, 4),
+      blogs: blogsList.slice(floor, ceil),
     },
+    revalidate: 10,
   };
 }
 
